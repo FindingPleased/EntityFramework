@@ -4,9 +4,7 @@
 using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Migrations;
 using Microsoft.Data.Entity.Migrations.Infrastructure;
-using Microsoft.Data.Entity.Migrations.Utilities;
 using Microsoft.Data.Entity.Relational;
-using Microsoft.Data.Entity.SqlServer.Utilities;
 
 namespace Microsoft.Data.Entity.SqlServer
 {
@@ -16,15 +14,20 @@ namespace Microsoft.Data.Entity.SqlServer
             DbContextConfiguration contextConfiguration,
             HistoryRepository historyRepository,
             MigrationAssembly migrationAssembly,
-            MigrationScaffolder migrationScaffolder)
+            MigrationScaffolder migrationScaffolder,
+            ModelDiffer modelDiffer,
+            DatabaseBuilder databaseBuilder,
+            SqlServerMigrationOperationSqlGenerator sqlGenerator,
+            SqlStatementExecutor sqlStatementExecutor)
             : base(
-                Check.NotNull(contextConfiguration, "contextConfiguration"), 
+                contextConfiguration, 
                 historyRepository, 
                 migrationAssembly, 
                 migrationScaffolder,
-                contextConfiguration.GetService<ModelDiffer>(),
-                contextConfiguration.GetService<SqlServerMigrationOperationSqlGenerator>(),
-                contextConfiguration.GetService<SqlStatementExecutor>())
+                modelDiffer,
+                databaseBuilder,
+                sqlGenerator,
+                sqlStatementExecutor)
         {
         }
     }

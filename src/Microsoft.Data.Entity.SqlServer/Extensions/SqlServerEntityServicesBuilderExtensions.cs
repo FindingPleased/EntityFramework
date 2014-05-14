@@ -25,8 +25,6 @@ namespace Microsoft.Framework.DependencyInjection
                 .AddSingleton<SqlServerSqlGenerator, SqlServerSqlGenerator>()
                 .AddSingleton<SqlStatementExecutor, SqlStatementExecutor>()
                 .AddSingleton<SqlServerTypeMapper, SqlServerTypeMapper>()
-                .AddSingleton<MigrationCodeGenerator, CSharpMigrationCodeGenerator>()
-                .AddSingleton<ModelCodeGenerator, CSharpModelCodeGenerator>()
                 .AddScoped<SqlServerDataStore, SqlServerDataStore>()
                 .AddScoped<SqlServerConnection, SqlServerConnection>()
                 .AddScoped<SqlServerBatchExecutor, SqlServerBatchExecutor>()
@@ -36,7 +34,9 @@ namespace Microsoft.Framework.DependencyInjection
                 .AddScoped<Migrator, SqlServerMigrator>()
                 .AddScoped<HistoryRepository, HistoryRepository>()
                 .AddScoped<MigrationAssembly, MigrationAssembly>()
-                .AddScoped<MigrationScaffolder, MigrationScaffolder>();
+                .AddScoped<MigrationScaffolder, MigrationScaffolder>()
+                .AddScoped<CSharpMigrationCodeGenerator, CSharpMigrationCodeGenerator>()
+                .AddScoped<CSharpModelCodeGenerator, CSharpModelCodeGenerator>();
 
             return builder;
         }

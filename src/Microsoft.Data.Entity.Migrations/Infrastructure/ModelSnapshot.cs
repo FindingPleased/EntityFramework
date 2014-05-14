@@ -5,8 +5,8 @@ using Microsoft.Data.Entity.Metadata;
 
 namespace Microsoft.Data.Entity.Migrations.Infrastructure
 {
-    public interface IModelSnapshot
+    public abstract class ModelSnapshot
     {
-        IModel Model { get; }
+        public abstract IModel Model { get; }
     }
 }

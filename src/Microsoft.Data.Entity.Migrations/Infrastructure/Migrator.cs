@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.Data.Entity.Infrastructure;
+using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Migrations.Model;
 using Microsoft.Data.Entity.Migrations.Utilities;
 using Microsoft.Data.Entity.Relational;
@@ -20,6 +21,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
         private readonly MigrationAssembly _migrationAssembly;
         private readonly MigrationScaffolder _migrationScaffolder;
         private readonly ModelDiffer _modelDiffer;
+        private readonly DatabaseBuilder _databaseBuilder;
         private readonly MigrationOperationSqlGenerator _sqlGenerator;
         private readonly SqlStatementExecutor _sqlExecutor;
 
@@ -29,6 +31,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
             [NotNull] MigrationAssembly migrationAssembly,
             [NotNull] MigrationScaffolder migrationScaffolder,
             [NotNull] ModelDiffer modelDiffer,
+            [NotNull] DatabaseBuilder databaseBuilder,
             [NotNull] MigrationOperationSqlGenerator sqlGenerator,
             [NotNull] SqlStatementExecutor sqlExecutor)
         {
@@ -37,6 +40,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
             Check.NotNull(migrationAssembly, "migrationAssembly");
             Check.NotNull(migrationScaffolder, "migrationScaffolder");
             Check.NotNull(modelDiffer, "modelDiffer");
+            Check.NotNull(databaseBuilder, "databaseBuilder");
             Check.NotNull(sqlGenerator, "sqlGenerator");
             Check.NotNull(sqlExecutor, "sqlExecutor");
 
@@ -45,6 +49,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
             _migrationAssembly = migrationAssembly;
             _migrationScaffolder = migrationScaffolder;
             _modelDiffer = modelDiffer;
+            _databaseBuilder = databaseBuilder;
             _sqlGenerator = sqlGenerator;
             _sqlExecutor = sqlExecutor;
         }
@@ -74,6 +79,11 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
             get { return _modelDiffer; }
         }
 
+        public virtual DatabaseBuilder DatabaseBuilder
+        {
+            get { return _databaseBuilder; }
+        }
+
         public virtual MigrationOperationSqlGenerator SqlGenerator
         {
             get { return _sqlGenerator; }
@@ -88,12 +98,10 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
         {
             Check.NotEmpty(migrationName, "migrationName");
 
-            // TODO: Handle duplicate migration names.
-
             var sourceModel = MigrationAssembly.Model;
             var targetModel = ContextConfiguration.Model;
-            IReadOnlyList<MigrationOperation> upgradeOperations, downgradeOperations;
 
+            IReadOnlyList<MigrationOperation> upgradeOperations, downgradeOperations;
             if (sourceModel != null)
             {
                 upgradeOperations = ModelDiffer.Diff(sourceModel, targetModel);
@@ -101,8 +109,8 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
             }
             else
             {
-                upgradeOperations = ModelDiffer.DiffTarget(targetModel);
-                downgradeOperations = ModelDiffer.DiffSource(targetModel);                
+                upgradeOperations = ModelDiffer.DiffSource(targetModel);
+                downgradeOperations = ModelDiffer.DiffTarget(targetModel);                
             }
 
             _migrationScaffolder.ScaffoldMigration(
@@ -113,72 +121,66 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
                         UpgradeOperations = upgradeOperations,
                         DowngradeOperations = downgradeOperations
                     });
-        }
 
-        public virtual IReadOnlyList<IMigrationMetadata> GetDatabaseMigrations()
-        {
-            return HistoryRepository.Migrations;
-        }
-
-        public virtual IReadOnlyList<IMigrationMetadata> GetLocalMigrations()
-        {
-            return HistoryRepository.Migrations;
+            _migrationScaffolder.ScaffoldModel(targetModel);
         }
 
         public virtual IReadOnlyList<IMigrationMetadata> GetPendingMigrations()
         {
-            return GetLocalMigrations()
-                .Except(GetDatabaseMigrations(), (x, y) => x.Timestamp == y.Timestamp && x.Name == y.Name)
+            return MigrationAssembly.Migrations
+                .Except(HistoryRepository.Migrations, (x, y) => x.Timestamp == y.Timestamp && x.Name == y.Name)
                 .ToArray();
         }
 
-        public virtual IReadOnlyList<IMigrationMetadata> GetMigrationsSince(string migrationId)
+        public virtual IReadOnlyList<IMigrationMetadata> GetMigrationsSince([NotNull] string migrationName)
         {
-            return GetLocalMigrations()
-                .Where(m => string.CompareOrdinal(migrationId, m.Timestamp + m.Name) < 0)
-                .ToArray();
+            Check.NotEmpty(migrationName, "migrationName");
+
+            var migrations = new List<IMigrationMetadata>();
+            var found = false;
+
+            foreach (var migration in MigrationAssembly.Migrations)
+            {
+                if (found)
+                {
+                    migrations.Add(migration);
+                }
+                else if (migration.Name == migrationName)
+                {
+                    migrations.Add(migration);
+                    found = true;
+                }
+            }
+
+            return migrations;
         }
 
         public virtual void UpdateDatabase()
         {
-            var pendingMigrations = GetPendingMigrations();
+            // TODO: Run the following in a transaction.
 
-            if (!pendingMigrations.Any())
+            foreach (var migration in GetPendingMigrations())
             {
-                return;
+                UpdateDatabase(migration);
+
+                HistoryRepository.AddMigration(migration);
             }
+        }
 
-            // TODO: Run the following if and foreach in a transaction.
+        protected virtual void UpdateDatabase(IMigrationMetadata migration)
+        {
+            SqlGenerator.Database = DatabaseBuilder.GetDatabase(migration.TargetModel);
 
-            if (!ContextConfiguration.Context.Database.Exists())
-            {
-                var operations = ModelDiffer.DiffTarget(HistoryRepository.HistoryModel);
+            var statements = SqlGenerator.Generate(migration.UpgradeOperations, generateIdempotentSql: true);
+            // TODO: Figure out what needs to be done to avoid the cast below.
+            var dbConnection = ((RelationalConnection)_contextConfiguration.Connection).DbConnection;
 
-                UpdateDatabase(operations);
-            }
-
-            foreach (var migration in pendingMigrations)
-            {
-                UpdateDatabase(migration.UpgradeOperations);
-
-                _historyRepository.AddMigration(migration);
-            }
-
-            _migrationScaffolder.ScaffoldModel(pendingMigrations.Last().TargetModel);
+            _sqlExecutor.ExecuteNonQuery(dbConnection, statements);
         }
 
         protected virtual string CreateMigrationTimestamp()
         {
             return DateTime.UtcNow.ToString("yyyyMMddHHmmssf", CultureInfo.InvariantCulture);
-        }
-
-        protected virtual void UpdateDatabase(IReadOnlyList<MigrationOperation> operations)
-        {
-            var statements = _sqlGenerator.Generate(operations, generateIdempotentSql: true);
-            // TODO: Figure out what needs to be done to avoid the cast below.
-            var dbConnection = ((RelationalConnection)_contextConfiguration.Connection).DbConnection;
-
-            _sqlExecutor.ExecuteNonQuery(dbConnection, statements);
         }
     }
 }

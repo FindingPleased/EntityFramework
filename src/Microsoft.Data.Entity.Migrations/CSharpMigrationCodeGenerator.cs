@@ -44,14 +44,14 @@ namespace Microsoft.Data.Entity.Migrations
         }
 
         public override void GenerateClass(
-            [NotNull] string @namespace,
-            [NotNull] string className,
-            [NotNull] IMigrationMetadata migration,
-            [NotNull] IndentedStringBuilder stringBuilder)
+            string @namespace,
+            string className,
+            IMigrationMetadata migration,
+            IndentedStringBuilder stringBuilder)
         {
             var operations = migration.UpgradeOperations.Concat(migration.DowngradeOperations);
 
-            foreach (var ns in GetNamespaces(operations).OrderBy(n => n))
+            foreach (var ns in GetNamespaces(operations).OrderBy(n => n).Distinct())
             {
                 stringBuilder
                     .Append("using ")
@@ -93,14 +93,15 @@ namespace Microsoft.Data.Entity.Migrations
         }
 
         public override void GenerateDesignerClass(
-            [NotNull] string @namespace,
-            [NotNull] string className,
-            [NotNull] IMigrationMetadata migration,
-            [NotNull] IndentedStringBuilder stringBuilder)
+            string @namespace,
+            string className,
+            IMigrationMetadata migration,
+            IndentedStringBuilder stringBuilder)
         {
             foreach (var ns in GetMetadataDefaultNamespaces()
                 .Concat(ModelCodeGenerator.GetNamespaces(migration.TargetModel))
-                .OrderBy(n => n))
+                .OrderBy(n => n)
+                .Distinct())
             {
                 stringBuilder
                     .Append("using ")
@@ -218,7 +219,7 @@ namespace Microsoft.Data.Entity.Migrations
             stringBuilder.Append("}");
         }
 
-        public override void Generate([NotNull] CreateDatabaseOperation createDatabaseOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(CreateDatabaseOperation createDatabaseOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(createDatabaseOperation, "createDatabaseOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -229,7 +230,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] DropDatabaseOperation dropDatabaseOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropDatabaseOperation dropDatabaseOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropDatabaseOperation, "dropDatabaseOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -240,7 +241,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] CreateSequenceOperation createSequenceOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(CreateSequenceOperation createSequenceOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(createSequenceOperation, "createSequenceOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -259,7 +260,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] DropSequenceOperation dropSequenceOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropSequenceOperation dropSequenceOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropSequenceOperation, "dropSequenceOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -270,7 +271,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] CreateTableOperation createTableOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(CreateTableOperation createTableOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(createTableOperation, "createTableOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -316,7 +317,7 @@ namespace Microsoft.Data.Entity.Migrations
             }
         }
 
-        public override void Generate([NotNull] DropTableOperation dropTableOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropTableOperation dropTableOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropTableOperation, "dropTableOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -327,7 +328,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] RenameTableOperation renameTableOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(RenameTableOperation renameTableOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(renameTableOperation, "renameTableOperation");
 
@@ -339,7 +340,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] MoveTableOperation moveTableOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(MoveTableOperation moveTableOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(moveTableOperation, "moveTableOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -352,7 +353,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] AddColumnOperation addColumnOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(AddColumnOperation addColumnOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(addColumnOperation, "addColumnOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -369,7 +370,7 @@ namespace Microsoft.Data.Entity.Migrations
             stringBuilder.Append(")");
         }
 
-        public override void Generate([NotNull] DropColumnOperation dropColumnOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropColumnOperation dropColumnOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropColumnOperation, "dropColumnOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -382,7 +383,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] RenameColumnOperation renameColumnOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(RenameColumnOperation renameColumnOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(renameColumnOperation, "renameColumnOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -397,7 +398,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] AlterColumnOperation alterColumnOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(AlterColumnOperation alterColumnOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(alterColumnOperation, "alterColumnOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -414,7 +415,7 @@ namespace Microsoft.Data.Entity.Migrations
             stringBuilder.Append(")");
         }
 
-        public override void Generate([NotNull] AddDefaultConstraintOperation addDefaultConstraintOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(AddDefaultConstraintOperation addDefaultConstraintOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(addDefaultConstraintOperation, "addDefaultConstraintOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -442,7 +443,7 @@ namespace Microsoft.Data.Entity.Migrations
             stringBuilder.Append("))");
         }
 
-        public override void Generate([NotNull] DropDefaultConstraintOperation dropDefaultConstraintOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropDefaultConstraintOperation dropDefaultConstraintOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropDefaultConstraintOperation, "dropDefaultConstraintOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -455,7 +456,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] AddPrimaryKeyOperation addPrimaryKeyOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(AddPrimaryKeyOperation addPrimaryKeyOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(addPrimaryKeyOperation, "addPrimaryKeyOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -472,7 +473,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] DropPrimaryKeyOperation dropPrimaryKeyOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropPrimaryKeyOperation dropPrimaryKeyOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropPrimaryKeyOperation, "dropPrimaryKeyOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -485,7 +486,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] AddForeignKeyOperation addForeignKeyOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(AddForeignKeyOperation addForeignKeyOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(addForeignKeyOperation, "addForeignKeyOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -506,7 +507,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] DropForeignKeyOperation dropForeignKeyOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropForeignKeyOperation dropForeignKeyOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropForeignKeyOperation, "dropForeignKeyOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -519,7 +520,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] CreateIndexOperation createIndexOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(CreateIndexOperation createIndexOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(createIndexOperation, "createIndexOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -538,7 +539,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] DropIndexOperation dropIndexOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(DropIndexOperation dropIndexOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(dropIndexOperation, "dropIndexOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -551,7 +552,7 @@ namespace Microsoft.Data.Entity.Migrations
                 .Append(")");
         }
 
-        public override void Generate([NotNull] RenameIndexOperation renameIndexOperation, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(RenameIndexOperation renameIndexOperation, IndentedStringBuilder stringBuilder)
         {
             Check.NotNull(renameIndexOperation, "renameIndexOperation");
             Check.NotNull(stringBuilder, "stringBuilder");
@@ -804,8 +805,7 @@ namespace Microsoft.Data.Entity.Migrations
                 identifier = "_" + identifier;
             }
 
-            // TODO: Use CSharpCodeProvider.IsValidIdentifier when CSharpCodeProvider becomes available in ProjectK.
-            // TODO: The logic above can generate non-unique identifiers.
+            // TODO: Validate identifiers (not keywords, unique).
 
             return identifier;
         }

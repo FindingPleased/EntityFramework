@@ -67,14 +67,14 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
         protected virtual IModel LoadModel()
         {
             var modelSnapshotType = Assembly.GetAccessibleTypes().SingleOrDefault(
-                t => t.GetTypeInfo().IsSubclassOf(typeof(IModelSnapshot))
+                t => t.GetTypeInfo().IsSubclassOf(typeof(ModelSnapshot))
                      && t.GetPublicConstructor() != null
                      && !t.GetTypeInfo().IsAbstract
                      && !t.GetTypeInfo().IsGenericType
                      && t.Namespace == Namespace);
 
             return modelSnapshotType != null
-                ? ((IModelSnapshot)Activator.CreateInstance(modelSnapshotType)).Model
+                ? ((ModelSnapshot)Activator.CreateInstance(modelSnapshotType)).Model
                 : null;
         }
     }

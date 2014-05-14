@@ -18,17 +18,17 @@ namespace Microsoft.Data.Entity.Migrations
         }
 
         public override void GenerateClass(
-            [NotNull] string @namespace,
-            [NotNull] string className,
-            [NotNull] IModel model, 
-            [NotNull] IndentedStringBuilder stringBuilder)
+            string @namespace,
+            string className,
+            IModel model, 
+            IndentedStringBuilder stringBuilder)
         {
             Check.NotEmpty(className, "className");
             Check.NotEmpty(@namespace, "namespace");
             Check.NotNull(model, "model");
             Check.NotNull(stringBuilder, "stringBuilder");
 
-            foreach (var ns in GetNamespaces(model))
+            foreach (var ns in GetNamespaces(model).OrderBy(n => n).Distinct())
             {
                 stringBuilder
                     .Append("using ")
@@ -45,16 +45,15 @@ namespace Microsoft.Data.Entity.Migrations
             using (stringBuilder.Indent())
             {
                 stringBuilder
-                    .AppendLine()
                     .Append("public class ")
                     .Append(className)
-                    .AppendLine(" : IModelSnapshot")
+                    .AppendLine(" : ModelSnapshot")
                     .AppendLine("{");
 
                 using (stringBuilder.Indent())
                 {
                     stringBuilder
-                        .AppendLine("public IModel Model")
+                        .AppendLine("public override IModel Model")
                         .AppendLine("{");
 
                     using (stringBuilder.Indent())
@@ -82,8 +81,7 @@ namespace Microsoft.Data.Entity.Migrations
             stringBuilder.Append("}");
         }
 
-        public override void Generate(
-            [NotNull] IModel model, [NotNull] IndentedStringBuilder stringBuilder)
+        public override void Generate(IModel model, IndentedStringBuilder stringBuilder)
         {
             stringBuilder.Append("var builder = new ModelBuilder()");
 
@@ -100,7 +98,7 @@ namespace Microsoft.Data.Entity.Migrations
         }
 
         protected virtual void GenerateEntityTypes(
-            [NotNull] IReadOnlyList<IEntityType> entityTypes, [NotNull] IndentedStringBuilder stringBuilder)
+            IReadOnlyList<IEntityType> entityTypes, IndentedStringBuilder stringBuilder)
         {
             // TODO: Handle entity types not associated with CLR types.
 

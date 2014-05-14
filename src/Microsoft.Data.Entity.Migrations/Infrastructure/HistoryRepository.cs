@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 using Microsoft.Data.Entity.Infrastructure;
 using Microsoft.Data.Entity.Metadata;
 using Microsoft.Data.Entity.Migrations.Utilities;
-using Microsoft.Data.Entity.Relational;
 
 namespace Microsoft.Data.Entity.Migrations.Infrastructure
 {
@@ -15,6 +14,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
     {
         private readonly DbContextConfiguration _contextConfiguration;
         private IModel _historyModel;
+        private bool _exists;
 
         public HistoryRepository([NotNull] DbContextConfiguration contextConfiguration)
         {
@@ -41,18 +41,25 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
         public virtual DbContext CreateHistoryContext()
         {
             var options = new DbContextOptions().UseModel(HistoryModel);
-            var extensions = ContextConfiguration.ContextOptions.Extensions;
 
             // TODO: Revisit and decide whether it is ok to reuse the extension instances
             // from the user context for the history context.
-            foreach (var extension in extensions)
+            foreach (var extension in ContextConfiguration.ContextOptions.Extensions)
             {
                 options.AddBuildAction(c => c.AddOrUpdateExtension(extension));
             }
 
-            return new DbContext(
-                ContextConfiguration.Services.ServiceProvider,
+            var context = new DbContext(
+                ContextConfiguration.Services.ServiceProvider, 
                 options.BuildConfiguration());
+
+            if (!_exists && !context.Database.Exists())
+            {
+                context.Database.Create();
+                _exists = true;
+            }
+
+            return context;
         }
 
         public virtual IReadOnlyList<IMigrationMetadata> Migrations
@@ -103,7 +110,8 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
                         ps.Property(e => e.Timestamp);
                         ps.Property(e => e.ContextKey);
                     })
-                .Key(e => new { e.Timestamp, e.MigrationName, e.ContextKey });
+                // TODO: Key should be {e.Timestamp, e.MigrationName, e.ContextKey} but composite keys are not implemented yet.
+                .Key(e => new { e.MigrationName });
 
             return builder.Model;
         }
@@ -115,8 +123,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
 
         private class HistoryRow
         {
-            // TODO: Which is better MigrationId or Timestamp+MigrationName?
-            public string MigrationName { get; set; }            
+            public string MigrationName { get; set; }
             public string Timestamp { get; set; }
             public string ContextKey { get; set; }            
         }

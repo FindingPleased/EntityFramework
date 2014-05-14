@@ -18,7 +18,7 @@ namespace Microsoft.Data.Entity.Migrations.Infrastructure
 
         public MigrationScaffolder(
             [NotNull] DbContextConfiguration contextConfiguration,
-            [NotNull] MigrationCodeGenerator migrationCodeGenerator)
+            [NotNull] CSharpMigrationCodeGenerator migrationCodeGenerator)
         {
             Check.NotNull(contextConfiguration, "contextConfiguration");
             Check.NotNull(migrationCodeGenerator, "migrationCodeGenerator");

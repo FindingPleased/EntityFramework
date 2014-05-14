@@ -59,8 +59,11 @@ namespace Microsoft.Data.Entity.SqlServer
             }
 
             // TODO: If this fails, we're left with an empty database
-            _statementExecutor.ExecuteNonQuery(_connection.DbConnection, CreateSchemaCommands(_historyRepository.HistoryModel));            
-            _statementExecutor.ExecuteNonQuery(_connection.DbConnection, CreateSchemaCommands(model));
+            _statementExecutor.ExecuteNonQuery(_connection.DbConnection, CreateSchemaCommands(_historyRepository.HistoryModel));
+            if (model != _historyRepository.HistoryModel)
+            {
+                _statementExecutor.ExecuteNonQuery(_connection.DbConnection, CreateSchemaCommands(model));
+            }
         }
 
         public override async Task CreateAsync(IModel model, CancellationToken cancellationToken = default(CancellationToken))
@@ -76,8 +79,11 @@ namespace Microsoft.Data.Entity.SqlServer
                 ClearPool();
             }
 
-            await _statementExecutor.ExecuteNonQueryAsync(_connection.DbConnection, CreateSchemaCommands(_historyRepository.HistoryModel));
-            await _statementExecutor.ExecuteNonQueryAsync(_connection.DbConnection, CreateSchemaCommands(model), cancellationToken);
+            await _statementExecutor.ExecuteNonQueryAsync(_connection.DbConnection, CreateSchemaCommands(_historyRepository.HistoryModel), cancellationToken);
+            if (model != _historyRepository.HistoryModel)
+            {
+                await _statementExecutor.ExecuteNonQueryAsync(_connection.DbConnection, CreateSchemaCommands(model), cancellationToken);
+            }
         }
 
         private IEnumerable<SqlStatement> CreateSchemaCommands(IModel model)

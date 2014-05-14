@@ -2,10 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Microsoft.Data.Entity.Metadata;
-using Microsoft.Data.Entity.Migrations.Utilities;
 using Microsoft.Data.Entity.Utilities;
 
 namespace Microsoft.Data.Entity.Migrations
@@ -23,7 +21,8 @@ namespace Microsoft.Data.Entity.Migrations
         {
             return new[]
                 {
-                    "Microsoft.Data.Entity.Metadata"
+                    "Microsoft.Data.Entity.Metadata",
+                    "Microsoft.Data.Entity.Migrations.Infrastructure"
                 };
         }
 
